@@ -14,11 +14,14 @@ use AssetCombiner\utils\CssHelper;
  * Class SimpleCssFilter
  * @package AssetCombiner
  */
-class SimpleCssFilter extends BaseFilter {
+class SimpleCssFilter extends BaseFilter
+{
+
     /**
      * @inheritdoc
      */
-    public function process($files, $output) {
+    public function process($files, $output)
+    {
         return CssHelper::combineFiles($files, $output);
     }
 }

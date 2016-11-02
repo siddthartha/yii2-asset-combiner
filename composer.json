@@ -1,5 +1,5 @@
 {
-    "name": "tquant/yii2-asset-combiner",
+    "name": "siddthartha/yii2-asset-combiner",
     "description": "Asset combiner for Yii2",
     "keywords": [
         "yii2",
@@ -13,7 +13,11 @@
         {
             "name": "Mikhail Meschangin",
             "email": "e@albalynx.com"
-        }
+        },
+	{
+	    "name": "Anton Sadovnikoff",
+	    "email": "sadovnikoff@gmail.com"
+	}
     ],
     "require": {
         "yiisoft/yii2": "~2.0.0"

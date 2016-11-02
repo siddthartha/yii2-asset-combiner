@@ -15,28 +15,39 @@ use yii\helpers\Url;
  * Class CssHelper
  * @package AssetCombiner
  */
-abstract class CssHelper {
+abstract class CssHelper
+{
+
     /**
      * @param string[] $files
      * @param string $output
      * @param boolean $return Return content or save to $output
      * @return string|bool
      */
-    public static function combineFiles($files, $output, $return = false) {
-        $path = \Yii::getAlias('@webroot');
-        $imports = [];
-        $content = '';
+    public static function combineFiles($files, $output, $return = false)
+    {
+        $path       = \Yii::getAlias('@webroot');
+        $imports    = [];
+        $content    = '';
         $importsStr = '';
-        foreach ($files as $file) {
+
+        foreach ($files as $file)
+        {
             $content .= '/* File: ' . str_replace($path, '', $file) . " */\n";
             $content .= self::rewrite($file, $output, $imports) . "\n";
         }
-        foreach ($imports as $import) {
+
+        foreach ($imports as $import)
+        {
             $importsStr .= "@import url($import);\n";
         }
-        if ($return) {
+
+        if ($return)
+        {
             return $importsStr . $content;
-        } else {
+        }
+        else
+        {
             return file_put_contents($output, $importsStr . $content) !== false;
         }
     }
@@ -47,22 +58,28 @@ abstract class CssHelper {
      * @param $imports
      * @return string
      */
-    public static function rewrite($from, $to, &$imports) {
+    public static function rewrite($from, $to, &$imports)
+    {
         $dirFrom = FileHelper::normalizePath(dirname($from));
-        $dirTo = FileHelper::normalizePath(dirname($to));
-        $content = file_get_contents($from);
+        $dirTo   = FileHelper::normalizePath(dirname($to));
+        $content = \AssetCombiner\filters\BaseFilter::removeBOM(file_get_contents($from));
 
-        if ($dirFrom == $dirTo) {
+        if ($dirFrom == $dirTo)
+        {
             return $content;
         }
 
         // Относительный путь
         $path = '';
-        while (0 !== strpos($dirFrom, $dirTo)) {
+        while ($dirTo && 0 !== strpos($dirFrom, $dirTo))
+        {
             $path .= '../';
-            if (false !== ($pos = strrpos($dirTo, '/'))) {
+            if (false !== ($pos = strrpos($dirTo, '/')))
+            {
                 $dirTo = substr($dirTo, 0, $pos);
-            } else {
+            }
+            else
+            {
                 $dirTo = '';
                 break;
             }
@@ -70,26 +87,33 @@ abstract class CssHelper {
         $path .= ltrim(substr($dirFrom . '/', strlen($dirTo)), '/');
 
         // Заменяем адреса
-        $content = CssUtils::filterUrls($content, function ($matches) use ($path) {
-            if (!Url::isRelative($matches['url']) || 0 === strpos($matches['url'], 'data:')
-                || isset($matches['url'][0]) && '/' == $matches['url'][0]
-            ) {
-                // Абсолютный путь или data uri bили путь относительно корня
-                return $matches[0];
-            }
-            // Пусть относительно файла
-            $url = FileHelper::normalizePath($path . $matches['url'], '/');
+        $content = CssUtils::filterUrls($content, function ($matches) use ($path)
+            {
+                if (!Url::isRelative($matches['url'])
+                    || 0 === strpos($matches['url'], 'data:')
+                    || isset($matches['url'][0])
+                    && '/' == $matches['url'][0]
+                ) {
+                    // Абсолютный путь или data uri bили путь относительно корня
+                    return $matches[0];
+                }
 
-            return str_replace($matches['url'], $url, $matches[0]);
-        });
+                // Пусть относительно файла
+                $url = FileHelper::normalizePath($path . $matches['url'], '/');
+
+                return str_replace($matches['url'], $url, $matches[0]);
+            });
 
         // Собираем и корректируем импорты
         $newImports = CssUtils::extractImports($content);
-        if (!empty($newImports)) {
-            foreach ($newImports as $i => $import) {
-                if (!Url::isRelative($import) || 0 === strpos($import, 'data:')
-                    || isset($import[0]) && '/' == $import[0]
-                ) {
+        if (!empty($newImports))
+        {
+            foreach ($newImports as $i => $import)
+            {
+                if (!Url::isRelative($import) || 0 === strpos($import, 'data:') || isset($import[0])
+                    && '/' == $import[0]
+                )
+                {
                     // Абсолютный путь или data uri bили путь относительно корня
                     continue;
                 }

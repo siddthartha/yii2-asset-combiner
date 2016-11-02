@@ -8,22 +8,24 @@
 
 namespace AssetCombiner\filters;
 
-use AssetCombiner\utils\CssHelper;
-
 /**
  * Class SimpleJsFilter
  * @package AssetCombiner
  */
-class SimpleJsFilter extends BaseFilter {
+class SimpleJsFilter extends BaseFilter
+{
+
     /**
      * @inheritdoc
      */
-    public function process($files, $output) {
-        $path = \Yii::getAlias('@webroot');
+    public function process($files, $output)
+    {
+        $path    = \Yii::getAlias('@webroot');
         $content = '';
-        foreach ($files as $file) {
+        foreach ($files as $file)
+        {
             $content .= '// File: ' . str_replace($path, '', $file) . "\n";
-            $content .= file_get_contents($file) . "\n";
+            $content .= BaseFilter::removeBOM(file_get_contents($file)) . "\n";
         }
         return file_put_contents($output, $content);
     }

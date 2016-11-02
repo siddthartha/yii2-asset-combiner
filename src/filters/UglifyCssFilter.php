@@ -14,24 +14,34 @@ use AssetCombiner\utils\CssHelper;
  * Class UglifyCssFilter
  * @package AssetCombiner
  */
-class UglifyCssFilter extends BaseFilter {
-    /** @var string Path to UglifyCss */
+class UglifyCssFilter extends BaseFilter
+{
+    /**
+     * @var string Path to UglifyCss
+     */
     public $libPath = 'uglifycss';
+
+    /**
+     * @var boolean
+     */
+    public $sort = false;
 
     /**
      * @inheritdoc
      */
-    public function process($files, $output) {
+    public function process($files, $output)
+    {
         $tmpFile = tempnam("/tmp", "yac");
         $content = CssHelper::combineFiles($files, $output, true);
         file_put_contents($tmpFile, $content);
 
-        $cmd = $this->libPath . ' ' . escapeshellarg($tmpFile) . ' > ' . escapeshellarg($output);
+        $cmd = $this->libPath . ' --cute-comments ' . escapeshellarg($tmpFile) . ' > ' . escapeshellarg($output);
         shell_exec($cmd);
 
         unlink($tmpFile);
 
-        if (!file_exists($output)) {
+        if (!file_exists($output))
+        {
             \Yii::error("Failed to process CSS files by UglifyCss with command: $cmd", __METHOD__);
             return false;
         }

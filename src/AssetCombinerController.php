@@ -23,11 +23,13 @@ use yii\web\AssetBundle;
  *
  * @package AssetCombiner
  */
-class AssetCombinerController extends Controller {
-    use AssetCombinerTrait {
+class AssetCombinerController extends Controller
+{
+
+    use AssetCombinerTrait
+    {
         init as traitInit;
     }
-
     /** @var string controller default action ID. */
     public $defaultAction = 'combine';
 
@@ -52,7 +54,8 @@ class AssetCombinerController extends Controller {
     /**
      * @inheritdoc
      */
-    public function init() {
+    public function init()
+    {
         $this->assetsNamespace = trim($this->assetsNamespace, '\\') . '\\';
         $this->traitInit();
     }
@@ -63,26 +66,30 @@ class AssetCombinerController extends Controller {
      * @throws \yii\base\Exception
      * @throws \yii\base\InvalidConfigException
      */
-    public function actionCombine($configFile) {
+    public function actionCombine($configFile)
+    {
         // Remove existing config
-        if (file_exists($configFile)) {
+        if (file_exists($configFile))
+        {
             unlink($configFile);
         }
 
         $bundles = [];
-        $path = \Yii::getAlias($this->assetsDir);
-        $files = FileHelper::findFiles($path, [
-            'recursive' => $this->recursive,
+        $path    = \Yii::getAlias($this->assetsDir);
+        $files   = FileHelper::findFiles($path, [
+                'recursive' => $this->recursive,
         ]);
 
-        foreach ($files as $file) {
-            $namespace = $this->assetsNamespace . ltrim(str_replace('/', '\\', substr(dirname($file), strlen($path))), '\\');
+        foreach ($files as $file)
+        {
+            $namespace       = $this->assetsNamespace . ltrim(str_replace('/', '\\', substr(dirname($file), strlen($path))), '\\');
             $this->bundles[] = rtrim($namespace, '\\') . '\\' . pathinfo($file, PATHINFO_FILENAME);
         }
 
         $this->bundles = array_unique($this->bundles);
 
-        foreach ($this->bundles as $name) {
+        foreach ($this->bundles as $name)
+        {
             $this->stdout("Creating output bundle ");
             $this->stdout("'{$name}'", Console::FG_YELLOW);
             $this->stdout(": ");
@@ -90,8 +97,8 @@ class AssetCombinerController extends Controller {
             $this->stdout("OK\n", Console::FG_GREEN);
         }
 
-        $array = VarDumper::export($bundles);
-        $version = date('Y-m-d H:i:s');
+        $array             = VarDumper::export($bundles);
+        $version           = date('Y-m-d H:i:s');
         $configFileContent = <<<EOD
 <?php
 /**
@@ -101,7 +108,8 @@ class AssetCombinerController extends Controller {
  */
 return {$array};
 EOD;
-        if (!file_put_contents($configFile, $configFileContent)) {
+        if (!file_put_contents($configFile, $configFileContent))
+        {
             throw new Exception("Unable to write output bundle configuration at '{$configFile}'.");
         }
         $this->stdout("Output bundle configuration created at '{$configFile}'.\n", Console::FG_GREEN);
@@ -115,46 +123,52 @@ EOD;
      * @throws \yii\base\Exception
      * @throws \yii\base\InvalidConfigException
      */
-    public function assembleBundle($name) {
+    public function assembleBundle($name)
+    {
         $files = [
-            'js' => [],
-            'css' => [],
-            'jsHash' => '',
+            'js'      => [],
+            'css'     => [],
+            'jsHash'  => '',
             'cssHash' => '',
         ];
 
-        $js = $css = [];
-        $manager = $this->getAssetManager();
-        $bundle = $manager->getBundle($name);
+        $js       = $css      = [];
+        $manager  = $this->getAssetManager();
+        $bundle   = $manager->getBundle($name);
         $monolith = ArrayHelper::getValue($bundle->publishOptions, 'monolith', false) && $this->precompileMonolith;
-        if ($monolith) {
-            $bundles = [];
+        if ($monolith)
+        {
+            $bundles  = [];
             $this->collectDependentBundles($name, $bundles);
             $included = array_keys($bundles);
             $this->collectAllFiles($name, $files, $bundles);
-        } else {
+        }
+        else
+        {
             $this->collectAssetFiles($bundle, $files);
         }
 
-        if (!empty($files['js']) && !empty($files['jsHash'])) {
+        if (!empty($files['js']) && !empty($files['jsHash']))
+        {
             $js[] = $this->writeFiles($files, 'js');
         }
 
-        if (!empty($files['css']) && !empty($files['cssHash'])) {
+        if (!empty($files['css']) && !empty($files['cssHash']))
+        {
             $css[] = $this->writeFiles($files, 'css');
         }
 
         return [
-            'class' => $bundle->className(),
-            'basePath' => $this->outputPath,
-            'baseUrl' => $this->outputUrl,
-            'js' => $js,
-            'css' => $css,
-            'jsOptions' => $bundle->jsOptions,
-            'cssOptions' => $bundle->cssOptions,
-            'publishOptions' => array_merge($bundle->publishOptions, ['accProcessed' => true],
-                ($monolith && !empty($included) ? ['accIncluded' => $included] : [])),
-            'depends' => $monolith ? [] : $bundle->depends,
+            'class'          => $bundle->className(),
+            'basePath'       => $this->outputPath,
+            'baseUrl'        => $this->outputUrl,
+            'js'             => $js,
+            'css'            => $css,
+            'jsOptions'      => $bundle->jsOptions,
+            'cssOptions'     => $bundle->cssOptions,
+            'publishOptions' => array_merge($bundle->publishOptions, ['accProcessed' => true], ($monolith
+                && !empty($included) ? ['accIncluded' => $included] : [])),
+            'depends'        => $monolith ? [] : $bundle->depends,
         ];
     }
 
@@ -163,13 +177,17 @@ EOD;
      * @param string[] $files
      * @param AssetBundle[] $bundles
      */
-    protected function collectAllFiles($name, &$files, &$bundles) {
-        if (!isset($bundles[$name])) {
+    protected function collectAllFiles($name, &$files, &$bundles)
+    {
+        if (!isset($bundles[$name]))
+        {
             return;
         }
         $bundle = $bundles[$name];
-        if ($bundle) {
-            foreach ($bundle->depends as $dep) {
+        if ($bundle)
+        {
+            foreach ($bundle->depends as $dep)
+            {
                 $this->collectAllFiles($dep, $files, $bundles);
             }
             $this->collectAssetFiles($bundle, $files);
@@ -186,32 +204,45 @@ EOD;
      * If this is null, asset bundles position settings will not be changed.
      * @throws InvalidConfigException if the asset bundle does not exist or a circular dependency is detected
      */
-    public function collectDependentBundles($name, &$bundles, $position = null) {
-        if (!isset($bundles[$name])) {
-            $am = $this->getAssetManager();
-            $bundle = $am->getBundle($name);
+    public function collectDependentBundles($name, &$bundles, $position = null)
+    {
+        if (!isset($bundles[$name]))
+        {
+            $am             = $this->getAssetManager();
+            $bundle         = $am->getBundle($name);
             $bundles[$name] = false;
             // register dependencies
-            $pos = isset($bundle->jsOptions['position']) ? $bundle->jsOptions['position'] : null;
-            foreach ($bundle->depends as $dep) {
+            $pos            = isset($bundle->jsOptions['position']) ? $bundle->jsOptions['position']
+                    : null;
+            foreach ($bundle->depends as $dep)
+            {
                 $this->collectDependentBundles($dep, $bundles, $pos);
             }
             $bundles[$name] = $bundle;
-        } elseif ($bundles[$name] === false) {
+        }
+        elseif ($bundles[$name] === false)
+        {
             throw new InvalidConfigException("A circular dependency is detected for bundle '$name'.");
-        } else {
+        }
+        else
+        {
             $bundle = $bundles[$name];
         }
 
-        if ($position !== null) {
+        if ($position !== null)
+        {
             $pos = isset($bundle->jsOptions['position']) ? $bundle->jsOptions['position'] : null;
-            if ($pos === null) {
-                $bundle->jsOptions['position'] = $pos = $position;
-            } elseif ($pos > $position) {
+            if ($pos === null)
+            {
+                $bundle->jsOptions['position'] = $pos                           = $position;
+            }
+            elseif ($pos > $position)
+            {
                 throw new InvalidConfigException("An asset bundle that depends on '$name' has a higher javascript file position configured than '$name'.");
             }
             // update position for all dependencies
-            foreach ($bundle->depends as $dep) {
+            foreach ($bundle->depends as $dep)
+            {
                 $this->collectDependentBundles($dep, $bundles, $pos);
             }
         }

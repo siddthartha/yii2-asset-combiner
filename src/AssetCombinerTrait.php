@@ -23,34 +23,61 @@ use yii\web\AssetManager;
  * Class AssetCombinerTrait
  * @package AssetCombiner
  */
-trait AssetCombinerTrait {
-    /** @var string|array JS filter class name or configuration array */
+trait AssetCombinerTrait
+{
+    /**
+     * @var string|array JS filter class name or configuration array
+     */
     public $filterJs;
-    /** @var string|array CSS filter class name or configuration array */
-    public $filterCss;
-    /** @var string Output path for combined files */
-    public $outputPath = '@webroot/assets/ac';
-    /** @var string Output url for combined files */
-    public $outputUrl = '@web/assets/ac';
 
-    /** @var BaseFilter */
+    /**
+     * @var string|array CSS filter class name or configuration array
+     */
+    public $filterCss;
+
+    /**
+     * @var string Output path for combined files
+     */
+    public $outputPath = '@webroot/assets/ac';
+
+    /**
+     * @var string Output url for combined files
+     */
+    public $outputUrl  = '@web/assets/ac';
+
+    /**
+     * @var BaseFilter
+     */
     protected $_filterJs;
-    /** @var BaseFilter */
+
+    /**
+     * @var BaseFilter
+     */
     protected $_filterCss;
-    /** @var AssetManager */
+
+    /**
+     *  @var AssetManager
+     */
     protected $_assetManager = [];
 
     /**
      * Resolve aliases
      */
-    public function init() {
-        $this->outputUrl = Yii::getAlias($this->outputUrl);
+    public function init()
+    {
+        $this->outputUrl  = Yii::getAlias($this->outputUrl);
         $this->outputPath = Yii::getAlias($this->outputPath);
-        if (!FileHelper::createDirectory($this->outputPath, 0777)) {
+
+        if (!FileHelper::createDirectory($this->outputPath, 0777))
+        {
             throw new InvalidConfigException("Failed to create directory: {$this->outputPath}");
-        } elseif (!is_writable($this->outputPath)) {
+        }
+        elseif (!is_writable($this->outputPath))
+        {
             throw new InvalidConfigException("The directory is not writable by the Web process: {$this->outputPath}");
-        } else {
+        }
+        else
+        {
             $this->outputPath = realpath($this->outputPath);
         }
     }
@@ -60,18 +87,27 @@ trait AssetCombinerTrait {
      * @throws \yii\base\Exception on invalid configuration.
      * @return \yii\web\AssetManager asset manager instance.
      */
-    public function getAssetManager() {
-        if (!is_object($this->_assetManager)) {
+    public function getAssetManager()
+    {
+        if (!is_object($this->_assetManager))
+        {
             $options = $this->_assetManager;
-            if (!isset($options['class'])) {
+        
+            if (!isset($options['class']))
+            {
                 $options['class'] = 'yii\\web\\AssetManager';
             }
-            if (!isset($options['basePath'])) {
+
+            if (!isset($options['basePath']))
+            {
                 throw new Exception("Please specify 'basePath' for the 'assetManager' option.");
             }
-            if (!isset($options['baseUrl'])) {
+
+            if (!isset($options['baseUrl']))
+            {
                 throw new Exception("Please specify 'baseUrl' for the 'assetManager' option.");
             }
+
             $this->_assetManager = Yii::createObject($options);
         }
 
@@ -83,22 +119,31 @@ trait AssetCombinerTrait {
      * @param \yii\web\AssetManager|array $assetManager asset manager instance or its array configuration.
      * @throws \yii\base\Exception on invalid argument type.
      */
-    public function setAssetManager($assetManager) {
-        if (is_scalar($assetManager)) {
+    public function setAssetManager($assetManager)
+    {
+        if (is_scalar($assetManager))
+        {
             throw new Exception('"' . get_class($this) . '::assetManager" should be either object or array - "' . gettype($assetManager) . '" given.');
         }
+
         $this->_assetManager = $assetManager;
     }
 
     /**
      * @return BaseFilter
      */
-    public function getFilter($type) {
-        if ($type == 'js') {
+    public function getFilter($type)
+    {
+        if ($type == 'js')
+        {
             return $this->getJsFilter();
-        } elseif ($type == 'css') {
+        }
+        elseif ($type == 'css')
+        {
             return $this->getCssFilter();
-        } else {
+        }
+        else
+        {
             throw new InvalidParamException('Invalid filter type: ' . $type);
         }
     }
@@ -106,12 +151,16 @@ trait AssetCombinerTrait {
     /**
      * @return BaseFilter
      */
-    public function getJsFilter() {
-        if ($this->_filterJs === null) {
-            if (!empty($this->filterJs)) {
+    public function getJsFilter()
+    {
+        if ($this->_filterJs === null)
+        {
+            if (!empty($this->filterJs))
+            {
                 $this->_filterJs = \Yii::createObject($this->filterJs);
             }
-            if (!$this->_filterJs) {
+            if (!$this->_filterJs)
+            {
                 $this->_filterJs = \Yii::createObject(SimpleJsFilter::className());
             }
         }
@@ -121,12 +170,17 @@ trait AssetCombinerTrait {
     /**
      * @return BaseFilter
      */
-    public function getCssFilter() {
-        if ($this->_filterCss === null) {
-            if (!empty($this->filterCss)) {
+    public function getCssFilter()
+    {
+        if ($this->_filterCss === null)
+        {
+            if (!empty($this->filterCss))
+            {
                 $this->_filterCss = \Yii::createObject($this->filterCss);
             }
-            if (!$this->_filterCss) {
+
+            if (!$this->_filterCss)
+            {
                 $this->_filterCss = \Yii::createObject(SimpleCssFilter::className());
             }
         }
@@ -137,20 +191,29 @@ trait AssetCombinerTrait {
      * @param AssetBundle $bundle
      * @param array $files
      */
-    protected function collectAssetFiles($bundle, &$files) {
+    protected function collectAssetFiles($bundle, &$files)
+    {
         $manager = $this->getAssetManager();
-        foreach ($bundle->js as $js) {
+
+        foreach ($bundle->js as $js)
+        {
             $file = is_array($js) ? array_shift($js) : $js;
             $path = $manager->getAssetPath($bundle, $file);
-            if ($path) {
+
+            if ($path)
+            {
                 $files['js'][] = $path;
                 $files['jsHash'] .= '|' . filemtime($path);
             }
         }
-        foreach ($bundle->css as $css) {
+
+        foreach ($bundle->css as $css)
+        {
             $file = is_array($css) ? array_shift($css) : $css;
             $path = $manager->getAssetPath($bundle, $file);
-            if ($path) {
+
+            if ($path)
+            {
                 $files['css'][] = $path;
                 $files['cssHash'] .= '|' . filemtime($path);
             }
@@ -163,18 +226,21 @@ trait AssetCombinerTrait {
      * @return string
      * @throws Exception
      */
-    protected function writeFiles($files, $type) {
-        $hash = sprintf('%x', crc32(implode('|', $files[$type]) . \Yii::getVersion()))
+    protected function writeFiles($files, $type)
+    {
+        $hash   = sprintf('%x', crc32(implode('|', $files[$type]) . \Yii::getVersion()))
             . '-' . sprintf('%x', crc32($files[$type . 'Hash'] . \Yii::getVersion()));
         $output = $this->outputPath . DIRECTORY_SEPARATOR . $hash . '.' . $type;
 
-        if (!file_exists($output)) {
+        if (!file_exists($output))
+        {
             $token = 'Write combined files to disk: ' . $output;
             \Yii::beginProfile($token, __METHOD__);
 
             $filter = $this->getFilter($type);
 
-            if (!$filter->process($files[$type], $output)) {
+            if (!$filter->process($files[$type], $output))
+            {
                 throw new Exception("Failed to process files with filter '" . $filter->className() . "'");
             }
 
