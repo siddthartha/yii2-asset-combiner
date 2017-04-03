@@ -9,13 +9,13 @@ The preferred way to install this extension is through [composer](http://getcomp
 Either run
 
 ```bash
-$ composer require tquant/yii2-asset-combiner
+$ composer require siddthartha/yii2-asset-combiner
 ```
 
 or add
 
 ```
-"tquant/yii2-asset-combiner": "*"
+"siddthartha/yii2-asset-combiner": "*"
 ```
 
 to the `require` section of your `composer.json` file.
